@@ -37,3 +37,11 @@ class Quantize(nn.Module):
         quantize = input + (quantize - input).detach()
         return quantize, embed_idx, diff
 
+
+# unit test
+if __name__ == '__main__':
+    N, C, H, W = 100, 128, 32, 32
+    test_vec = torch.randn(N, C, H, W)
+    quantize = Quantize(embed_size=512, embed_dim=C)
+    test_out, idx, diff = quantize(test_vec)
+    print(test_out.shape, idx.shape, diff.shape)
