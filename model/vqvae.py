@@ -49,9 +49,12 @@ class VQVAE(nn.Module):
         self.out = self.decoder(self.z_q)
         return self.out
 
-    def backward(self):
+    def calc_loss(self):
         recon_loss = F.mse_loss(self.out, self.real_data)
-        self.loss = recon_loss + self.embed_loss + self.commit_loss_weight * self.commit_loss
+        return recon_loss + self.embed_loss + self.commit_loss_weight * self.commit_loss
+
+    def backward(self):
+        self.loss = self.calc_loss()
         self.loss.backward()
 
     def optimize(self):
@@ -59,6 +62,12 @@ class VQVAE(nn.Module):
         self.optimizer.zero_grad()
         self.backward()
         self.optimizer.step()
+
+    def evaluate(self):
+        with torch.no_grad():
+            self.forward()
+            loss = self.calc_loss()
+            return loss
 
     def test(self):
         with torch.no_grad():

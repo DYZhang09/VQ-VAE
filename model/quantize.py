@@ -18,7 +18,7 @@ class Quantize(nn.Module):
         super().__init__()
         self.embed_size = embed_size
         self.embed_dim = embed_dim
-        self.embed = nn.Parameter(torch.zeros(embed_size, embed_dim))
+        self.embed = nn.Parameter(torch.randn(embed_size, embed_dim))
 
     def embed_code(self, embed_idx):
         return F.embedding(embed_idx, self.embed)
