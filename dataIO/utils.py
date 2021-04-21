@@ -21,7 +21,7 @@ def get_img_paths(root, suffix='.png', max_size=float("inf")):
             if filename.endswith(suffix):
                 img_paths.append(os.path.join(root, filename))
                 len += 1
-                if len > max_size:
+                if len >= max_size:
                     return img_paths
     return img_paths
 

@@ -24,16 +24,14 @@ class DataSpliter(object):
         self.img_paths = get_img_paths(root_path, img_suffix, max_total_num)
         if shuffle:
             random.shuffle(self.img_paths)
-        self.train_ratio = train_ratio
-        self.val_ratio = val_ratio
-        self.train_num = int(len(self.img_paths) * self.train_ratio)
-        self.val_num = self.train_num + int(len(self.img_paths) * self.val_ratio) if self.val_ratio else None
+        self.train_num = int(len(self.img_paths) * train_ratio)
+        self.val_num = self.train_num + int(len(self.img_paths) * val_ratio) if val_ratio else None
 
     def train_set(self):
         return self.img_paths[:self.train_num]
 
     def val_set(self):
-        if self.val_ratio is not None:
+        if self.val_num is not None:
             return self.img_paths[self.train_num:self.val_num]
         else:
             return None
