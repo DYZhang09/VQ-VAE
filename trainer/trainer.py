@@ -5,7 +5,7 @@ import torch.optim as optim
 import os
 
 from model.vqvae import VQVAE
-from dataIO.dataset import CIFAR10
+
 
 ###########################################################
 # This file defines the trainer used for training models  #
@@ -44,7 +44,7 @@ class Trainer(object):
                 if i >= self.max_batch:
                     break
 
-            data, _ = data[0], data[1]
+            data = data["img"]
             if self.use_gpu:
                 data = data.cuda()
             self.model.set_input(data)
@@ -59,7 +59,7 @@ class Trainer(object):
                 if self.max_batch is not None:
                     if i >= self.max_batch:
                         break
-                data, _ = data[0], data[1]
+                data = data["img"]
                 if self.use_gpu:
                     data = data.cuda()
                 self.model.set_input(data)
@@ -69,12 +69,3 @@ class Trainer(object):
             if epoch % self.log_per_epoch == 0 and self.log_dir is not None:
                 path = os.path.join(self.log_dir, 'epoch_%d_vqvae_weight.pth' % epoch)
                 torch.save(self.model.state_dict(), path)
-
-
-# unit test
-if __name__ == '__main__':
-    vqvae = VQVAE()
-    cifar10 = CIFAR10(r'../dataset', batch_size=16, shuffle=Trainer, num_workers=2)
-    train_loader, test_loader = cifar10.get_loader()
-    trainer = Trainer(vqvae, train_loader, test_loader, log_dir='../weights', epochs=5, log_per_epoch=1, max_batch=10)
-    trainer.train()
