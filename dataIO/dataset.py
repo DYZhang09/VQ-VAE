@@ -5,64 +5,37 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 import os
 
+from dataIO.utils import read_image
+from dataIO.dataspliter import DataSpliter
+
 
 ################################################################
 # This file defines the util classes for getting data from     #
 # datasets                                                     #
 ################################################################
 
-
-class CIFAR10(object):
+class CustomDataset(data.Dataset):
     """
-    CIFAR-10 dataset
+    custom dataset
     """
 
-    def __init__(self, root_path, batch_size, shuffle=False, transform=None, download=True, num_workers=1):
+    def __init__(self,
+                 paths,
+                 transform=None):
+        super(CustomDataset, self).__init__()
         if transform is None:
-            transform = [transforms.ToTensor()]
-            transform = transforms.Compose(transform)
-        dataset_train = datasets.CIFAR10(root_path, train=True, transform=transform, download=download)
-        dataset_test = datasets.CIFAR10(root_path, train=False, transform=transform, download=download)
-        self.train_loader = data.DataLoader(dataset_train,
-                                            batch_size=batch_size,
-                                            shuffle=shuffle,
-                                            num_workers=num_workers)
-        self.test_loader = data.DataLoader(dataset_test,
-                                           batch_size=batch_size,
-                                           shuffle=shuffle,
-                                           num_workers=num_workers)
+            self.transform = transforms.ToTensor()
+        else:
+            self.transform = transform
+        self.paths = paths
 
-    def get_loader(self):
-        return self.train_loader, self.test_loader
+    def __len__(self):
+        return len(self.paths)
 
+    def __getitem__(self, item):
+        img_path = self.paths[item]
+        img = read_image(img_path)
+        if self.transform is not None:
+            img = self.transform(img)
+        return {'img': img, 'path': img_path}
 
-class CIFAR100(object):
-    """
-    CIFAR-100 dataset
-    """
-
-    def __init__(self, root_path, batch_size, shuffle=False, transform=None, download=True, num_workers=1):
-        if transform is None:
-            transform = [transforms.ToTensor()]
-            transform = transforms.Compose(transform)
-        dataset_train = datasets.CIFAR100(root_path, train=True, transform=transform, download=download)
-        dataset_test = datasets.CIFAR100(root_path, train=False, transform=transform, download=download)
-        self.train_loader = data.DataLoader(dataset_train,
-                                            batch_size=batch_size,
-                                            shuffle=shuffle,
-                                            num_workers=num_workers)
-        self.test_loader = data.DataLoader(dataset_test,
-                                           batch_size=batch_size,
-                                           shuffle=shuffle,
-                                           num_workers=num_workers)
-
-    def get_loader(self):
-        return self.train_loader, self.test_loader
-
-
-# unit test
-if __name__ == '__main__':
-    cifar10 = CIFAR10(r'../dataset', batch_size=64, shuffle=True, download=True, num_workers=2)
-    train_loader, test_loader = cifar10.get_loader()
-    for i, data in enumerate(test_loader):
-        print(data[0].shape, data[1].shape)
