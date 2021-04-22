@@ -81,7 +81,7 @@ class VQVAE(nn.Module):
 
 # unit test
 if __name__ == '__main__':
-    N, C, H, W = 100, 3, 128, 128
+    N, C, H, W = 100, 3, 178, 178
     test_vec = torch.randn(N, C, H, W)
     vqvae = VQVAE()
     vqvae.set_input(test_vec)
