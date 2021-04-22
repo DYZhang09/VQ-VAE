@@ -31,8 +31,13 @@ if __name__ == '__main__':
     parser.add_argument('--weight_file', type=str, default=None,
                         help='where the weight file resides if want to resume training')
     parser.add_argument('--resume', type=bool, default=False, help='whether to resume training')
+    parser.add_argument('--device', type=str, default='0', help='the cuda device')
 
     args = parser.parse_args()
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.device
+    device = torch.device('cuda')
+    print(torch.cuda.current_device())
 
     provider = DataProvider(dataset_root=args.dataroot,
                             img_suffix=args.img_suffix,
@@ -53,6 +58,7 @@ if __name__ == '__main__':
                       test_dataloader=provider.test_loader(),
                       epochs=args.epochs,
                       use_gpu=args.use_gpu,
+                      device=device,
                       log_dir=args.weight_dir,
                       log_per_epoch=args.log_per_epochs)
     trainer.train()
