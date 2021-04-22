@@ -25,6 +25,7 @@ class Trainer(object):
                  epochs,
                  log_per_epoch=10,
                  use_gpu=False,
+                 device=torch.device('cuda'),
                  max_batch=None):
         self.model = model
         self.train_loader = train_dataloader
@@ -33,11 +34,12 @@ class Trainer(object):
         self.epochs = epochs
         self.log_per_epoch = log_per_epoch
         self.use_gpu = use_gpu
+        self.device = device
         self.max_batch = max_batch
 
     def __eval(self):
         if self.use_gpu:
-            self.model.cuda()
+            self.model.to(self.device)
 
         for i, data in enumerate(self.test_loader):
             if self.max_batch is not None:
@@ -46,13 +48,13 @@ class Trainer(object):
 
             data = data["img"]
             if self.use_gpu:
-                data = data.cuda()
+                data = data.to(self.device)
             self.model.set_input(data)
             print("|eval loss: %.6f" % self.model.evaluate())
 
     def train(self):
         if self.use_gpu:
-            self.model.cuda()
+            self.model.to(self.device)
 
         for epoch in range(1, self.epochs + 1):
             for i, data in enumerate(self.train_loader):
@@ -61,7 +63,7 @@ class Trainer(object):
                         break
                 data = data["img"]
                 if self.use_gpu:
-                    data = data.cuda()
+                    data = data.to(self.device)
                 self.model.set_input(data)
                 self.model.optimize()
                 self.model.print_loss(epoch)
