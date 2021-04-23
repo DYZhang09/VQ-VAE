@@ -2,6 +2,7 @@ import typing
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 #########################################################
@@ -162,17 +163,78 @@ class ResBlockStack(nn.Module):
         return self.net(input)
 
 
-class WeightNormLinear(nn.Module):
+class GatedActivation(nn.Module):
     """
-    weight norm linear
+    gated activation layer
     """
 
-    def __init__(self, in_nc, out_nc):
+    def __init__(self):
         super().__init__()
-        self.net = nn.utils.weight_norm(nn.Linear(in_nc, out_nc))
 
-    def forward(self, input):
-        return self.net(input)
+    def forward(self, input: torch.Tensor):
+        x, y = input.chunk(2, dim=1)
+        return torch.tanh(x) * torch.sigmoid(y)
+
+
+class GatedPixelCNNConv2d(nn.Module):
+    """
+    a single layer in the Gated PixelCNN architecture
+    """
+
+    def __init__(self, in_nc, kernel_size, residual=True, num_class=10, make_causal=False):
+        super().__init__()
+        assert kernel_size % 2 == 1, "the [kernel_size] must be odd"
+
+        self.residual = residual
+        self.make_causal = make_causal
+
+        self.cond_embed = nn.Embedding(num_class, in_nc * 2)
+
+        kernel_sz = (kernel_size // 2 + 1, kernel_size)
+        pad_sz = (kernel_size // 2, kernel_size // 2)
+        self.vertical_conv = nn.Conv2d(in_nc, in_nc * 2, kernel_sz, 1, pad_sz)
+
+        self.ver2hor_conv = nn.Conv2d(in_nc * 2, in_nc*2, 1)
+
+        kernel_sz = (1, kernel_size // 2 + 1)
+        pad_sz = (0, kernel_size // 2)
+        self.horizontal_conv = nn.Conv2d(in_nc, 2 * in_nc, kernel_sz, 1, pad_sz)
+
+        self.hor_out_conv = nn.Conv2d(in_nc, in_nc, 1)
+
+        self.gate = GatedActivation()
+
+        self.x_h = None
+        self.x_v = None
+        self.h = None
+
+    def set_input(self, x_h, x_v, h):
+        self.x_h = x_h
+        self.x_v = x_v
+        self.h = h
+
+    def get_causal(self):
+        self.vertical_conv.weight.data[:, :, -1].zero_()
+        self.horizontal_conv.weight.data[:, :, :, -1].zero_()
+
+    def forward(self):
+        if self.make_causal:
+            self.get_causal()
+
+        h = self.cond_embed(self.h)
+        x_vert = self.vertical_conv(self.x_v)
+        x_vert = x_vert[:, :, :self.x_v.size(-1), :]
+        out_v = self.gate(x_vert + h[:, :, None, None])
+
+        x_hor = self.horizontal_conv(self.x_h)
+        x_hor = x_hor[:, :, :, :self.x_h.size(-2)]
+        x_hor += self.ver2hor_conv(x_vert)
+
+        out_h = self.gate(x_hor + h[:, :, None, None])
+        out_h = self.hor_out_conv(out_h)
+        if self.residual:
+            out_h += self.x_h
+        return out_v, out_h
 
 
 # unit test
