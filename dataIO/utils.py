@@ -55,7 +55,7 @@ def img2tensor_transform():
 
 def tensor2img(img_tensor):
     tf = tensor2img_transform()
-    return tf(img_tensor).convert('RGB')
+    return tf(img_tensor.cpu())
 
 
 def img2tensor(img):
@@ -71,5 +71,6 @@ if __name__ == '__main__':
         img = read_image(path, read_as_numpy=True)
         print(img.shape)
         img_tensor = img2tensor(img)
+        print(img_tensor.mean())
         out = tensor2img(img_tensor)
         write_image(r'./test.jpg', out)
