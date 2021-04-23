@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_ratio', type=float, default=0.2, help='the ratio of images used to test')
     parser.add_argument('--batch_size', type=int, default=1, help='the input batch size')
     parser.add_argument('--use_gpu', type=bool, default=False, help='whether to use gpu')
-    parser.add_argument('--weight_file', type=str, default=None,
+    parser.add_argument('--weight_file', type=str, default='./weights/epoch_10_vqvae_weight.pth',
                         help='where the weight file resides if want to resume training')
     parser.add_argument('--device', type=str, default='0', help='the cuda device')
 
@@ -46,7 +46,6 @@ if __name__ == '__main__':
             img = img.to(device)
         model.set_input(img)
         out = model.test()
-        print(out)
         N = out.shape[0]
         for i in range(N):
             out_img = tensor2img(out[i])
