@@ -38,8 +38,10 @@ class Quantize(nn.Module):
         quantize = quantize.permute([0, 3, 1, 2])
         # print(quantize)
 
+        embed_loss = F.mse_loss(input.detach(), quantize)
+        commit_loss = F.mse_loss(quantize.detach(), input)
         quantize = input + (quantize - input).detach()
-        return quantize
+        return quantize, embed_idx, embed_loss, commit_loss
 
 
 # unit test

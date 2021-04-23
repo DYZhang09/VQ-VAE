@@ -33,6 +33,8 @@ class VQVAE(nn.Module):
         self.z_q = None
         self.z_e = None
         self.q = None
+        self.embed_loss = None
+        self.commit_loss = None
         self.out = None
         self.real_data = None
         self.loss = 0
@@ -42,15 +44,14 @@ class VQVAE(nn.Module):
 
     def forward(self):
         self.z_e = self.encoder(self.real_data)
-        self.z_q = self.quantize(self.z_e)
+        self.z_q, self.q, self.embed_loss, self.commit_loss = self.quantize(self.z_e)
+        self.embed_loss = self.embed_loss.unsqueeze(0)
         self.out = self.decoder(self.z_q)
         return self.out
 
     def calc_loss(self):
         recon_loss = F.mse_loss(self.out, self.real_data)
-        embed_loss = F.mse_loss(self.z_e.detach(), self.z_q)
-        commit_loss = F.mse_loss(self.z_q.detach(), self.z_e)
-        return recon_loss + embed_loss + self.commit_loss_weight * commit_loss
+        return recon_loss + self.embed_loss + self.commit_loss_weight * self.commit_loss
 
     def backward(self):
         self.loss = self.calc_loss()
