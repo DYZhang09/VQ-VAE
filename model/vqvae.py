@@ -25,16 +25,14 @@ class VQVAE(nn.Module):
                  commit_loss_weight=1,
                  lr=2e-4):
         super().__init__()
-        self.encoder = Encoder(in_nc=in_nc, hidden_nc=256, out_nc=embed_dim)
+        self.encoder = Encoder(in_nc=in_nc, hidden_nc=embed_dim//2, out_nc=embed_dim)
         self.quantize = Quantize(embed_size=embed_size, embed_dim=embed_dim)
-        self.decoder = Decoder(in_nc=embed_dim, hidden_nc=256, out_nc=out_nc)
+        self.decoder = Decoder(in_nc=embed_dim, hidden_nc=embed_dim//2, out_nc=out_nc)
         self.optimizer = torch.optim.Adam(self.parameters(), lr=lr)
         self.commit_loss_weight = commit_loss_weight
         self.z_q = None
         self.z_e = None
         self.q = None
-        self.embed_loss = None
-        self.commit_loss = None
         self.out = None
         self.real_data = None
         self.loss = 0
@@ -44,14 +42,15 @@ class VQVAE(nn.Module):
 
     def forward(self):
         self.z_e = self.encoder(self.real_data)
-        self.z_q, self.q, self.embed_loss, self.commit_loss = self.quantize(self.z_e)
-        self.embed_loss = self.embed_loss.unsqueeze(0)
+        self.z_q = self.quantize(self.z_e)
         self.out = self.decoder(self.z_q)
         return self.out
 
     def calc_loss(self):
         recon_loss = F.mse_loss(self.out, self.real_data)
-        return recon_loss + self.embed_loss + self.commit_loss_weight * self.commit_loss
+        embed_loss = F.mse_loss(self.z_e.detach(), self.z_q)
+        commit_loss = F.mse_loss(self.z_q.detach(), self.z_e)
+        return recon_loss + embed_loss + self.commit_loss_weight * commit_loss
 
     def backward(self):
         self.loss = self.calc_loss()
@@ -81,7 +80,7 @@ class VQVAE(nn.Module):
 
 # unit test
 if __name__ == '__main__':
-    N, C, H, W = 100, 3, 178, 178
+    N, C, H, W = 100, 3, 128, 128
     test_vec = torch.randn(N, C, H, W)
     vqvae = VQVAE()
     vqvae.set_input(test_vec)

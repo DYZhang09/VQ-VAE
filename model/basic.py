@@ -40,6 +40,8 @@ class Conv2dStack(nn.Module):
                                     kernel_size=kernel_size[i],
                                     stride=stride[i],
                                     padding=padding[i]))
+            if i != n_layers - 1:
+                blocks.append(nn.BatchNorm2d(out_channel))
             blocks.append(activation)
         self.net = nn.Sequential(*blocks)
 
@@ -78,6 +80,8 @@ class ConvTransposed2dStack(nn.Module):
                                              stride=stride[i],
                                              padding=padding[i]))
             blocks.append(activation)
+            if i != n_layers - 1:
+                blocks.append(nn.BatchNorm2d(out_channel))
         self.net = nn.Sequential(*blocks)
 
     def forward(self, input):
@@ -119,6 +123,8 @@ class ResBlock(nn.Module):
                                         stride=stride[i],
                                         padding=padding[i]))
                 blocks.append(activation)
+            if i != n_layers - 1:
+                blocks.append(nn.BatchNorm2d(in_nc))
         self.net = nn.Sequential(*blocks)
 
     def forward(self, input):
@@ -156,13 +162,26 @@ class ResBlockStack(nn.Module):
         return self.net(input)
 
 
+class WeightNormLinear(nn.Module):
+    """
+    weight norm linear
+    """
+
+    def __init__(self, in_nc, out_nc):
+        super().__init__()
+        self.net = nn.utils.weight_norm(nn.Linear(in_nc, out_nc))
+
+    def forward(self, input):
+        return self.net(input)
+
+
 # unit test
 if __name__ == '__main__':
     N, C, H, W = 100, 3, 128, 128
     resblock = ResBlock(in_nc=3, kernel_size=[3, 1], stride=1, padding=[1, 0], n_layers=2, activation_first=True)
     test_vec = torch.randn(N, C, H, W)
     test_out = resblock(test_vec)
-    print(test_out.shape)
+    print(test_out)
 
     resstack = ResBlockStack(in_nc=C, kernel_size=[3, 1], stride=1, padding=[1, 0], n_res_layer=2,
                              activation_first=True,
