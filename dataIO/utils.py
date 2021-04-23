@@ -55,7 +55,7 @@ def img2tensor_transform():
 
 def tensor2img(img_tensor):
     tf = tensor2img_transform()
-    return tf(img_tensor.cpu())
+    return tf(img_tensor.cpu()).convert('RGB')
 
 
 def img2tensor(img):
