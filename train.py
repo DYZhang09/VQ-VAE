@@ -35,9 +35,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.device
-    device = torch.device('cuda')
-    print(torch.cuda.current_device())
+    device = torch.device('cpu')
+    if args.use_gpu:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.device
+        device = torch.device('cuda')
 
     provider = DataProvider(dataset_root=args.dataroot,
                             img_suffix=args.img_suffix,
@@ -48,12 +49,12 @@ if __name__ == '__main__':
                             batch_size=args.batch_size)
     model = VQVAE(embed_size=args.embed_size,
                   embed_dim=args.embed_dim,
-                  commit_loss_weight=args.loss_weight,
-                  lr=args.lr)
+                  commit_loss_weight=args.loss_weight)
     if args.resume and args.weight_file is not None:
         model.load_state_dict(torch.load(args.weight_file))
-
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     trainer = Trainer(model=model,
+                      optimizer=optimizer,
                       train_dataloader=provider.train_loader(),
                       test_dataloader=provider.test_loader(),
                       epochs=args.epochs,
