@@ -31,13 +31,3 @@ class CustomDataloader(object):
     def __iter__(self):
         for i, datas in enumerate(self.dataloader):
             yield datas
-
-
-# unit test
-if __name__ == '__main__':
-    tf = transforms.Compose([transforms.ToTensor()])
-    ds = CustomDataset(r'../dataset/testA', '.jpg', transform=tf)
-    loader = CustomDataloader(ds, num_workers=2, shuffle=True)
-    for pairs in loader:
-        print(pairs['path'])
-

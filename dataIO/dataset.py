@@ -37,5 +37,4 @@ class CustomDataset(data.Dataset):
         img = read_image(img_path)
         if self.transform is not None:
             img = self.transform(img)
-        return {'img': img, 'path': img_path}
-
+        return (img, img_path)

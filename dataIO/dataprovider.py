@@ -47,9 +47,9 @@ class DataProvider(object):
 
 # unit test:
 if __name__ == '__main__':
-    provider = DataProvider(r'../dataset/testA', '.jpg', batch_size=2, num_workers=2)
+    provider = DataProvider(r'../dataset/', '.jpg', batch_size=2, num_workers=2)
     train_loader = provider.train_loader()
     test_loader = provider.test_loader()
     print(len(train_loader), len(test_loader))
     for data in test_loader:
-        print(data['img'].shape)
+        print(data[0].shape)

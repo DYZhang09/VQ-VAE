@@ -40,15 +40,20 @@ def write_image(path, image, is_numpy=False):
 
 
 def tensor2img_transform():
-    tf = [transforms.Normalize(mean=(-1, -1, -1), std=(2, 2, 2)),
-          transforms.ToPILImage()]
+    tf = [
+        transforms.Normalize(mean=(-1, -1, -1), std=(2, 2, 2)),
+        transforms.ToPILImage()
+    ]
     tf = transforms.Compose(tf)
     return tf
 
 
 def img2tensor_transform():
-    tf = [transforms.ToTensor(),
-          transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))]
+    tf = [
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+    ]
+
     tf = transforms.Compose(tf)
     return tf
 
