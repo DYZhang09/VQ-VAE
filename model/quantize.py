@@ -19,7 +19,7 @@ class Quantize(nn.Module):
         self.embed_size = embed_size
         self.embed_dim = embed_dim
         self.embed = nn.Embedding(embed_size, embed_dim)
-        self.embed.weight.data.uniform_(-1.0 / embed_size, 1.0 / embed_size)
+        self.embed.weight.data.uniform_(-1.0, 1.0)
 
     def embed_code(self, embed_idx):
         return self.embed(embed_idx)
@@ -28,7 +28,7 @@ class Quantize(nn.Module):
         assert input.shape[1] == self.embed_dim, "input dim doesn't match the dim of codebook!\n"
         N, C, H, W = input.shape
 
-        # input = torch.randn(1, 128, 64, 64)
+        # print(input)
         flatten = input.permute([0, 2, 3, 1]).contiguous().view(-1, self.embed_dim).type(torch.float)
         dist = torch.cdist(flatten, self.embed.weight.data)
         _, embed_idx = dist.min(dim=1)
@@ -46,11 +46,14 @@ class Quantize(nn.Module):
 
 # unit test
 if __name__ == '__main__':
-    a = torch.randn(4, 8)
-    b = torch.randn(10, 8)
-    print(b)
-    dist = torch.cdist(a, b)
+    codebook = nn.Embedding(num_embeddings=3, embedding_dim=2)
+    codebook.weight.data.uniform_(0, 10)
+    test_vec = torch.randint(high=10, size=(1, 2)).type(torch.float)
+    print(codebook.weight.data)
+    print(test_vec)
+    dist = torch.cdist(test_vec, codebook.weight.data)
     print(dist)
-    m, idx = dist.min(1)
-    print(m, idx, F.embedding(idx, b))
-    print(b[idx])
+    _, idx = dist.min(dim=1)
+    print(idx)
+    print(codebook(idx))
+
